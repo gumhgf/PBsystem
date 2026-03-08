@@ -2,11 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>协会课表管理系统 - v20</title>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <title>协会课表管理系统 - v21</title>
+    <script src="xlsx.full.min.js"></script>
     <style>
         :root { --blue: #1a73e8; --green: #2ecc71; --orange: #f39c12; --bg: #f4f7f6; --text: #2c3e50; --red: #ff4d4f; }
-        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: url('https://w.wallhaven.cc/full/1q/wallhaven-1q19l1.png') no-repeat center center fixed;
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: url('wall.png') no-repeat center center fixed;
     background-size: cover; margin: 0; display: flex; height: 100vh; color: var(--text); overflow: hidden; }
         
         input[type="text"], select {
@@ -26,6 +26,7 @@
         * { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-sizing: border-box; }
 
         /* --- 侧边栏 --- */
+        /* 1. 修改侧边栏样式 */
         .sidebar { 
     width: 300px;
     background: rgba(255, 255, 255, 0.8); 
@@ -41,6 +42,8 @@
     height: calc(100vh - 40px); /* 减去上下各 20px 的边距，保证不超出屏幕 */
     border-radius: 16px;       /* 给侧边栏整体加上圆角，更有悬浮感 */
     box-shadow: 0 8px 32px rgba(0,0,0,0.1); /* 增加阴影，强化“浮起来”的视觉效果 */
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
         .sidebar-header { padding: 20px; border-bottom: 2px solid var(--blue); flex-shrink: 0; }
        .member-list {
@@ -98,6 +101,9 @@
     flex-direction: column;
     gap: 20px;
     box-sizing: border-box; /* 确保 padding 不会撑大容器 */
+    align-items: center; /* 确保内部卡片水平居中 */
+    justify-content: flex-start;
+    transition: all 0.5s ease; /* 增加平滑过渡，让居中过程不突兀 */
 }
         .card {
     background: rgba(255, 255, 255, 0.8); /* 半透明白色 */
@@ -106,6 +112,11 @@
     padding: 25px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.1); /* 让阴影更深邃一点 */
     border: 1px solid rgba(255,255,255,0.3); /* 增加边缘亮光 */
+    
+    /* --- 核心修改：确保两个卡片一样宽 --- */
+    width: 100%;            /* 初始尝试占满 */
+    max-width: 900px;       /* 设置一个最大宽度，防止在大屏幕上拉得太长导致变形 */
+    min-width: 600px;       /* 设置最小宽度，保证排版不拥挤 */
 }
         
         .file-zone { display: flex; gap: 20px; flex-wrap: wrap; }
@@ -290,6 +301,73 @@
     border-radius: 10px;
 }
 
+/* 1. 初始侧边栏状态，确保过渡平滑 */
+.sidebar {
+    position: relative;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 2. 定义收起状态：向左偏移自身宽度，但留出一丁点边缘或完全隐藏 */
+.sidebar.collapsed {
+    /* 300px宽度 + 20px边距 = 320px */
+    transform: translateX(-320px) !important; 
+    /* 关键：使用 margin-right 而不是 margin-left，能更平稳地把右侧内容“吸”过来 */
+    margin-right: -300px !important;
+}
+
+/* 3. 悬浮切换按钮样式 */
+/* 1. 默认状态：完全透明 */
+.sidebar-toggle {
+    position: absolute;
+    right: -25px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 25px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 101;
+    color: var(--blue);
+    font-weight: bold;
+    box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+
+    /* 关键修改：初始透明 */
+    opacity: 0; 
+    transition: all 0.3s ease; /* 增加平滑过渡 */
+}
+
+/* 2. 悬停触发：当鼠标悬停在侧边栏整体或按钮区域时显现 */
+.sidebar:hover .sidebar-toggle,
+.sidebar-toggle:hover {
+    opacity: 1;
+}
+
+/* 3. 额外细节：收起状态下，按钮应该一直微弱可见，方便找回 */
+.sidebar.collapsed .sidebar-toggle {
+    opacity: 0.6; /* 收起后半透明显示，方便点击展开 */
+}
+
+.sidebar.collapsed .sidebar-toggle:hover {
+    opacity: 1;
+}
+
+/* 增加一个隐形的感应区域，鼠标靠近屏幕左侧边缘就显现按钮 */
+.sidebar::after {
+    content: "";
+    position: absolute;
+    right: -40px; /* 向外延伸 40 像素的感应区 */
+    top: 0;
+    width: 40px;
+    height: 100%;
+}
+
     </style>
 </head>
 <body>
@@ -322,6 +400,9 @@
     <div class="sidebar-footer">
         <button class="btn btn-outline" style="width:100%; color:var(--red); border-color:#ffa39e;" onclick="resetDB()">💣 重置所有数据</button>
     </div>
+<div class="sidebar-toggle" onclick="toggleSidebar()">
+    <span id="toggleIcon">◀</span>
+</div>
 </div>
 
 <div class="main">
@@ -377,7 +458,7 @@
         <h4>System Architect & Lead Developer</h4>
         <div class="dev-name">亦尔</div>
     </div>
-    <div class="dev-tag">CORE EDITION v20.0</div>
+    <div class="dev-tag">CORE EDITION v21.0</div>
 </div>
 
     <div id="resCard" class="card" style="display:none;"><div id="resTable" style="overflow-x:auto;"></div><button class="btn btn-blue" style="margin-top:15px;" onclick="window.print()">确认并打印排班结果</button></div>
@@ -595,8 +676,20 @@ function toggleManageMode() {
     }
 }
 
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const icon = document.getElementById('toggleIcon');
+    
+    sidebar.classList.toggle('collapsed');
+    
+    // 根据状态更换箭头方向
+    if (sidebar.classList.contains('collapsed')) {
+        icon.innerText = '▶'; // 收起时指向右
+    } else {
+        icon.innerText = '◀'; // 展开时指向左
+    }
+}
+
 </script>
 </body>
-
 </html>
-
